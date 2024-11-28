@@ -1,13 +1,16 @@
 import os
 
-# Define a set of invisible Unicode characters for the new icon labels
-# (Each character is different to ensure no conflicts)
+# Define the directory containing the desktop icons
+desktop_path = os.path.expanduser("~/Desktop")
+
+# Invisible Unicode characters for renaming
 invisible_names = [
-    "\u200B", "\u200C", "\u200D", "\u2060", "\u2061", "\u2062", "\u2063", 
-    "\uFEFF", "\u180E", "\u3164", "\uFFA0", "\u1D159"
+    "\u200B\u200B", "\u200C\u200C", "\u200D\u200D", "\u2060\u2060",
+    "\u2062\u2062", "\u2063\u2063", "\u2064\u2064", "\u3164\u3164",
+    "\uFFA0\uFFA0", "\uFEFF\uFEFF", "\u00A0\u00A0", "\u2800\u2800"
 ]
 
-# Mapping of current names (without ".url") to new invisible Unicode names
+# Define mappings: original icon names -> Unicode invisible names
 icon_renames = {
     "division2": invisible_names[0],
     "fortnite": invisible_names[1],
@@ -21,28 +24,33 @@ icon_renames = {
     "helldiver": invisible_names[9],
     "dbx": invisible_names[10],
     "Yakuza Like a Dragon": invisible_names[11],
+    "yakuza gaiden": invisible_names[0] + "\u200C",  # Ensures unique name
+    "Palworld": invisible_names[1] + "\u200D",       # Ensures unique name
+    "Wuthering Waves": invisible_names[2] + "\u2060",  # Ensures unique name
+    "Brotato": invisible_names[3] + "\u2062",       # Ensures unique name
 }
 
-# Get the path to the desktop
-desktop_path = os.path.join(os.environ["USERPROFILE"], "Desktop")
+# Iterate through files on the desktop and rename based on the dictionary
+for filename in os.listdir(desktop_path):
+    # Skip non-shortcut files
+    if not filename.endswith(".lnk") and not filename.endswith(".url"):
+        continue
 
-# Process each file on the desktop
-for file_name in os.listdir(desktop_path):
-    # Check if the file is a URL shortcut (.url file)
-    if file_name.endswith(".url"):
-        # Extract the base name without the ".url" extension
-        base_name = file_name[:-4]
-        # Check if the base name exists in the mapping
-        if base_name in icon_renames:
-            # Get the new name (invisible Unicode) from the mapping
-            new_name = icon_renames[base_name] + ".url"
-            # Rename the file
-            old_path = os.path.join(desktop_path, file_name)
-            new_path = os.path.join(desktop_path, new_name)
-            try:
-                os.rename(old_path, new_path)
-                print(f'Renamed "{file_name}" to "{new_name}"')
-            except Exception as e:
-                print(f'Error renaming "{file_name}": {e}')
+    # Extract the base name without extension
+    base_name, extension = os.path.splitext(filename)
 
-print("Renaming process completed.")
+    # If the name is in the dictionary, rename it
+    if base_name in icon_renames:
+        new_name = icon_renames[base_name] + extension
+        old_path = os.path.join(desktop_path, filename)
+        new_path = os.path.join(desktop_path, new_name)
+
+        try:
+            os.rename(old_path, new_path)
+            print(f'Renamed "{filename}" to "{new_name}"')
+        except FileExistsError:
+            print(f'Failed to rename "{filename}": File with the name "{new_name}" already exists.')
+        except Exception as e:
+            print(f'Failed to rename "{filename}": {e}')
+
+print("Renaming completed!")
